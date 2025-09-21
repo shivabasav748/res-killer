@@ -20,7 +20,7 @@ except:
     HAS_OPENAI = False
 
 # Page config
-st.set_page_config(page_title="Res Killer", page_icon="resume_analyzer/frontend/Gemini_Generated_Image_hiyqgnhiyqgnhiyq.png", layout="wide")
+st.set_page_config(page_title="Res Killer", page_icon="✅", layout="wide")
 
 # Load embedding model once
 @st.cache_resource
@@ -187,12 +187,14 @@ if page=="Results":
                 st.markdown("**Feedback:**")
                 st.write(row["feedback"])
 
-                # Skill match chart
+                # Skill match chart with hover
                 matched_skills = row['matched'].split(", ") if row['matched'] != "None" else []
                 missing_skills = row['missing'].split(", ") if row['missing'] != "None" else []
                 all_skills = matched_skills + missing_skills
                 values = [1]*len(matched_skills) + [0]*len(missing_skills)
                 colors = ["#2ecc71"]*len(matched_skills) + ["#e74c3c"]*len(missing_skills)
+                hover_text = [f"{s} ✅ Matched" for s in matched_skills] + [f"{s} ❌ Missing" for s in missing_skills]
+
                 if all_skills:
                     fig = go.Figure(go.Bar(
                         x=values,
@@ -200,7 +202,9 @@ if page=="Results":
                         orientation='h',
                         marker_color=colors,
                         text=["✅" if v==1 else "❌" for v in values],
-                        textposition="outside"
+                        textposition="outside",
+                        hovertext=hover_text,
+                        hoverinfo="text"
                     ))
                     fig.update_layout(
                         title="Skill Match Overview",
@@ -228,7 +232,7 @@ if page=="About":
     AI-powered Resume Relevance Checker.
     - Hard + Semantic match scoring
     - Optional LLM feedback
-    - Streamlit Dashboard with progress and metrics
+    - Streamlit Dashboard with progress, metrics, and interactive charts
     """)
     st.markdown("## Next Features Ideas")
     st.write("""
