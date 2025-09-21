@@ -5,7 +5,6 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
-from PIL import Image
 
 # Parsing and NLP
 import fitz  # PyMuPDF
@@ -21,7 +20,7 @@ except:
     HAS_OPENAI = False
 
 # Page config
-st.set_page_config(page_title="Res Killer", page_icon="✅", layout="wide")
+st.set_page_config(page_title="Res Killer", page_icon="", layout="wide")
 
 # Load embedding model once
 @st.cache_resource
@@ -29,52 +28,17 @@ def load_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
 model = load_model()
 
-# CSS styling
+# Inject CSS
 st.markdown("""
 <style>
-body {background-color: #f0f4f8;}
+body {background-color: #f4f7f9;}
 .stButton>button {
-    background-color: #2e86de; 
-    color: white; 
-    font-size: 18px; 
-    border-radius: 12px; 
-    padding: 10px 25px; 
-    transition: all 0.2s ease;
+    background-color: #2ecc71; color: white; font-size: 18px; border-radius: 10px; padding: 10px 20px;
 }
-.stButton>button:hover {
-    background-color: #1b4f72;
-}
-.card {
-    background: #ffffff; 
-    border-radius:12px; 
-    padding:20px; 
-    box-shadow:0 8px 20px rgba(0,0,0,0.1); 
-    margin-bottom:15px;
-}
-.stFileUploader {
-    border: 2px dashed #3498db; 
-    border-radius: 15px; 
-    padding: 20px; 
-    background: #eaf2f8;
-}
-[data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg, #f8f9fa 0%, #d6eaf8 100%);
-}
+.stFileUploader {border: 2px dashed #3498db; border-radius: 12px; padding: 15px; background: #ecf6ff;}
+.card {background: #ffffff; border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(24,39,75,0.08); margin-bottom:12px;}
 </style>
 """, unsafe_allow_html=True)
-
-# Logo
-if os.path.exists("assets/logo.png"):
-    logo = Image.open("assets/logo.png")
-    st.image(logo, width=150)
-
-# Landing page
-st.title("⚡ Res Killer – AI Resume Evaluator")
-st.markdown("""
-Welcome to **Res Killer**, your AI-powered resume relevance checker.  
-Upload Job Descriptions and candidate resumes, and get instant scoring with feedback, interactive charts, and skill insights.
-""")
-st.divider()
 
 # Helper functions
 def extract_text_from_pdf_bytes(file_bytes):
@@ -150,7 +114,11 @@ threshold = st.sidebar.slider("Skill Threshold",50,95,70,1)
 
 if "results_df" not in st.session_state: st.session_state["results_df"] = pd.DataFrame()
 
-# Evaluate Page
+# Header
+st.title("⚡ Res Killer – AI Resume Evaluator")
+st.subheader("Smart Resume Relevance Scoring System")
+
+# Page: Evaluate
 if page=="Evaluate":
     st.markdown("### Upload Job Description")
     jd_text = st.text_area("Paste JD here", height=180)
@@ -191,7 +159,7 @@ if page=="Evaluate":
             st.success("Evaluation complete!")
             st.dataframe(df)
 
-# Results Page
+# Page: Results
 if page=="Results":
     df = st.session_state.get("results_df", pd.DataFrame())
     if df.empty: st.info("No results yet. Run Evaluate first")
@@ -219,14 +187,12 @@ if page=="Results":
                 st.markdown("**Feedback:**")
                 st.write(row["feedback"])
 
-                # Interactive Plotly chart
+                # Skill match chart
                 matched_skills = row['matched'].split(", ") if row['matched'] != "None" else []
                 missing_skills = row['missing'].split(", ") if row['missing'] != "None" else []
                 all_skills = matched_skills + missing_skills
                 values = [1]*len(matched_skills) + [0]*len(missing_skills)
                 colors = ["#2ecc71"]*len(matched_skills) + ["#e74c3c"]*len(missing_skills)
-                hover_text = [f"{s} ✅ Matched" for s in matched_skills] + [f"{s} ❌ Missing" for s in missing_skills]
-
                 if all_skills:
                     fig = go.Figure(go.Bar(
                         x=values,
@@ -234,9 +200,7 @@ if page=="Results":
                         orientation='h',
                         marker_color=colors,
                         text=["✅" if v==1 else "❌" for v in values],
-                        textposition="outside",
-                        hovertext=hover_text,
-                        hoverinfo="text"
+                        textposition="outside"
                     ))
                     fig.update_layout(
                         title="Skill Match Overview",
@@ -257,16 +221,16 @@ if page=="Results":
                     """
                     components.html(confetti, height=100)
 
-# About Page
+# Page: About
 if page=="About":
     st.markdown("## About Res Killer")
     st.write("""
     AI-powered Resume Relevance Checker.
     - Hard + Semantic match scoring
     - Optional LLM feedback
-    - Streamlit Dashboard with progress, metrics, and interactive charts
+    - Streamlit Dashboard with progress and metrics
     """)
-    st.markdown("## Next Feature Ideas")
+    st.markdown("## Next Features Ideas")
     st.write("""
     - Resume section parsing (Skills, Experience, Education)
     - Vector DB for faster embedding search
